@@ -1,0 +1,6 @@
+.brand-mark{width:34px;height:34px;display:block;object-fit:contain;background:none;border-radius:0;color:inherit}
+.brand-photo .brand-mark{background:none;color:inherit}
+.auth-brand .brand-mark{background:none;color:inherit}
+.user-edit-form select{min-width:105px;border:1px solid #e2e9f0;padding:7px;border-radius:5px;font:inherit;font-size:9px;color:#172d45}
+.main-content:has(.auth-page){width:100%;max-width:none;min-height:100vh;margin:0}
+.auth-page{min-height:100vh}

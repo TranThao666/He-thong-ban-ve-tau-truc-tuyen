@@ -1,0 +1,11 @@
+@model PassengerInput
+@{
+    ViewData["Title"] = "Thông tin hành khách";
+    var trip = (TrainTrip)ViewBag.Trip;
+    var seat = (Seat)ViewBag.Seat;
+}
+<section class="booking-progress"><span class="active">01 <b>Chọn chuyến</b></span><i></i><span class="active">02 <b>Chọn ghế</b></span><i></i><span class="active">03 <b>Hành khách</b></span><i></i><span>04 <b>Thanh toán</b></span><i></i><span>05 <b>Hoàn tất</b></span></section>
+<div class="journey-banner"><div><b>@trip.TrainCode · @trip.Route?.Name</b><span>@trip.Departure.ToString("dd/MM/yyyy HH:mm") → @trip.Arrival.ToString("dd/MM/yyyy HH:mm") · Toa @seat.Car?.Number · Ghế @seat.Number</span></div><span class="hold-countdown">Ghế đang giữ · 15 phút</span></div>
+<section class="section-block narrow-section"><div class="section-heading"><div><span class="eyebrow">THÔNG TIN HÀNH KHÁCH</span><h1>Thông tin hành khách</h1><p class="muted">Thông tin trên vé cần trùng với giấy tờ tùy thân.</p></div></div>
+<div class="passenger-layout"><form asp-action="Passenger" method="post" class="panel form-panel" data-ajax-check>@Html.AntiForgeryToken()<input asp-for="TripId" type="hidden"/><input asp-for="SeatId" type="hidden"/><div asp-validation-summary="ModelOnly" class="validation-summary"></div><label>Họ và tên<input asp-for="Name" placeholder="Nguyễn Minh Anh" required/></label><span asp-validation-for="Name" class="field-error"></span><label>Số CCCD/CMND<input asp-for="Cccd" placeholder="Nhập số giấy tờ tùy thân" required/></label><span asp-validation-for="Cccd" class="field-error"></span><button class="button button-block">Tiếp tục thanh toán</button><a class="back-link" asp-action="Seats" asp-route-tripId="@trip.Id">← Quay lại chọn ghế</a></form>
+<aside class="panel summary-panel"><span class="eyebrow">CHI TIẾT ĐẶT VÉ</span><h3>@trip.TrainCode · @trip.Route?.Name</h3><div class="summary-row"><span>Khởi hành</span><b>@trip.Departure.ToString("dd/MM HH:mm")</b></div><div class="summary-row"><span>Đến nơi</span><b>@trip.Arrival.ToString("dd/MM HH:mm")</b></div><div class="summary-row"><span>Toa / ghế</span><b>@seat.Car?.Number / @seat.Number</b></div><div class="summary-total"><span>Tổng thanh toán</span><strong>@trip.BaseFare.ToString("N0") đ</strong></div></aside></div></section>

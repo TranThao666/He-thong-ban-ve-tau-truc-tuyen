@@ -1,0 +1,26 @@
+@model RegisterInput
+@{
+    ViewData["Title"] = "Đăng ký";
+    ViewData["HideFooter"] = true;
+}
+<section class="auth-page">
+    <div class="auth-panel auth-register-panel">
+        <div class="auth-content">
+            <a class="brand auth-brand" asp-controller="Home" asp-action="Index"><img class="brand-mark" src="/images/logo.svg" alt="" /><span>Vé Tàu Việt</span></a>
+            <span class="eyebrow">BẮT ĐẦU HÀNH TRÌNH</span><h2>Tạo tài khoản mới</h2><p class="muted">Đăng ký để tìm chuyến tàu và quản lý vé của bạn.</p>
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+            <form asp-action="Register" method="post" data-ajax-check>
+                @Html.AntiForgeryToken()
+                <label>Họ và tên<input asp-for="Name" placeholder="Nguyễn Minh Anh" required /></label><span asp-validation-for="Name" class="field-error"></span>
+                <div class="form-row"><div><label>Email<input asp-for="Email" type="email" placeholder="name@email.com" required /></label><span asp-validation-for="Email" class="field-error"></span></div><div><label>Số điện thoại<input asp-for="Phone" placeholder="090 123 4567" required /></label><span asp-validation-for="Phone" class="field-error"></span></div></div>
+                <label>Số CCCD<input asp-for="Cccd" placeholder="Nhập số căn cước" required /></label><span asp-validation-for="Cccd" class="field-error"></span>
+                <label>Mật khẩu<input asp-for="Password" type="password" placeholder="Tối thiểu 6 ký tự" required /></label><span asp-validation-for="Password" class="field-error"></span>
+                <label class="check-line consent"><input type="checkbox" name="TermsAccepted" required /> Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật.</label>
+                <button class="button button-block">Tạo tài khoản</button>
+            </form>
+            <p class="auth-switch">Đã có tài khoản? <a asp-action="Login">Đăng nhập</a></p>
+        </div>
+    </div>
+    <div class="auth-photo auth-photo-register"><div class="brand brand-photo"><img class="brand-mark" src="/images/logo.svg" alt="" /><span>Vé Tàu Việt</span></div><div class="photo-info"><h3>Một tài khoản,<br />mọi hành trình</h3><p>✓ &nbsp;Lưu thông tin hành khách dễ dàng</p><p>✓ &nbsp;Theo dõi vé và lịch sử đặt chỗ</p><p>✓ &nbsp;Nhận cập nhật hành trình tức thì</p></div></div>
+</section>
+

@@ -1,0 +1,12 @@
+@{
+    ViewData["Title"] = "Chọn toa và ghế";
+    var trip = (TrainTrip)ViewBag.Trip;
+    var cars = (IReadOnlyList<TrainCar>)ViewBag.Cars;
+}
+<section class="booking-progress"><span class="active">01 <b>Chọn chuyến</b></span><i></i><span class="active">02 <b>Chọn ghế</b></span><i></i><span>03 <b>Hành khách</b></span><i></i><span>04 <b>Thanh toán</b></span><i></i><span>05 <b>Hoàn tất</b></span></section>
+<div class="journey-banner"><div><b>@trip.TrainCode · @trip.Route?.Name</b><span>@trip.Departure.ToString("dd/MM/yyyy HH:mm") — @trip.Arrival.ToString("dd/MM/yyyy HH:mm")</span></div><a asp-controller="Home" asp-action="Index">Đổi chuyến</a></div>
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">SƠ ĐỒ CHỖ NGỒI</span><h1>Chọn toa và ghế</h1><p class="muted">Ghế được giữ trong 15 phút sau khi chọn.</p></div><div class="seat-legend"><span><i class="seat-free"></i> Trống</span><span><i class="seat-held"></i> Đang giữ</span><span><i class="seat-sold"></i> Đã bán</span></div></div>
+<div class="car-tabs">@foreach (var car in cars) { <span>Toa @car.Number <small>@car.SeatType</small></span> }</div>
+<div class="car-grid">@foreach (var car in cars) { <article class="car-panel"><div class="car-title"><b>Toa @car.Number · @car.Name</b><span>@car.SeatCount ghế</span></div><div class="seat-grid">@foreach (var seat in car.Seats.OrderBy(item => item.Number)) { var locked = seat.Status == "DaBan" || (seat.Status == "DangGiu" && seat.HeldAt >= DateTime.Now.AddMinutes(-15) && seat.HeldByUserId != int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)); if (locked) { <span class="seat seat-@seat.Status">@seat.Number</span> } else { <form asp-action="Hold" method="post"><input type="hidden" name="tripId" value="@trip.Id"/><input type="hidden" name="seatId" value="@seat.Id"/><button class="seat seat-available" title="Chọn ghế @seat.Number">@seat.Number</button></form> } }</div></article> }</div>
+<aside class="booking-summary"><div><span>Chuyến tàu</span><b>@trip.TrainCode · @trip.Route?.Name</b></div><div><span>Giá vé</span><b>@trip.BaseFare.ToString("N0") đ</b></div><p>Chọn một ghế còn trống để tiếp tục.</p></aside>
+</section>

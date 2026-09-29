@@ -1,0 +1,9 @@
+@{
+    ViewData["Title"] = "Tổng quan vận hành";
+    var trips = (IReadOnlyList<TrainTrip>)ViewBag.RecentTrips;
+}
+<section class="section-block admin-content"><div class="section-heading"><div><span class="eyebrow">BẢNG ĐIỀU KHIỂN</span><h1>Tổng quan vận hành</h1><p class="muted">Tình hình kinh doanh và vận hành hệ thống vé tàu.</p></div><span class="date-chip">@DateTime.Today.ToString("dd/MM/yyyy")</span></div>
+<div class="metric-grid"><article><span>Người dùng</span><b>@ViewBag.Users</b><small>Tài khoản hệ thống</small></article><article><span>Chuyến tàu</span><b>@ViewBag.Trips</b><small>Lịch trình đã tạo</small></article><article><span>Vé đã bán</span><b>@ViewBag.Paid</b><small>Đã xác nhận thanh toán</small></article><article><span>Doanh thu</span><b>@(((decimal)ViewBag.Revenue).ToString("N0")) đ</b><small>Vé đã thanh toán</small></article></div>
+<div class="admin-shortcuts"><a asp-action="RoutesAndTrips">＋ Quản lý tuyến và chuyến</a><a asp-action="Users">♙ Quản lý người dùng</a><a asp-controller="Staff" asp-action="Lookup">▣ Tra cứu vé</a></div>
+<div class="panel table-panel"><div class="section-heading"><div><h2>Lịch tàu sắp tới</h2><p class="muted">Các chuyến tàu đang được mở bán.</p></div><a class="text-link" asp-action="RoutesAndTrips">Quản lý lịch tàu →</a></div><div class="table-wrap"><table><thead><tr><th>Mã tàu</th><th>Tuyến</th><th>Khởi hành</th><th>Đến nơi</th><th>Giá vé</th><th>Ghế trống</th></tr></thead><tbody>@foreach (var trip in trips) { <tr><td><b>@trip.TrainCode</b></td><td>@trip.Route?.Name</td><td>@trip.Departure.ToString("dd/MM HH:mm")</td><td>@trip.Arrival.ToString("dd/MM HH:mm")</td><td>@trip.BaseFare.ToString("N0") đ</td><td>@trip.AvailableSeats / @trip.SeatCount</td></tr> }</tbody></table></div></div>
+</section>

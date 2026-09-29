@@ -1,0 +1,63 @@
+@model IReadOnlyList<TrainTicket>
+@{
+    ViewData["Title"] = "Vé của tôi";
+}
+<section class="section-block">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">HÀNH TRÌNH CỦA BẠN</span>
+            <h1>Vé của tôi</h1>
+            <p class="muted">Theo dõi trạng thái và thông tin các chuyến đã đặt.</p>
+        </div>
+        <a class="button" asp-controller="Home" asp-action="Index">+ Đặt vé mới</a>
+    </div>
+    <div class="ticket-stats">
+        <div><span>🎫</span><b>@Model.Count</b><small>Tổng số vé</small></div>
+        <div><span>✓</span><b>@Model.Count(ticket => ticket.PaymentStatus == "DaThanhToan")</b><small>Đã thanh toán</small></div>
+        <div><span>◷</span><b>@Model.Count(ticket => ticket.PaymentStatus == "ChoThanhToan")</b><small>Chờ xử lý</small></div>
+    </div>
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state">
+            <span>🎟</span><h3>Bạn chưa có vé tàu</h3>
+            <p>Tìm chuyến và bắt đầu hành trình đầu tiên.</p>
+            <a class="button" asp-controller="Home" asp-action="Index">Tìm chuyến tàu</a>
+        </div>
+    }
+    else
+    {
+        <div class="my-ticket-list">
+            @foreach (var ticket in Model)
+            {
+                <article class="my-ticket-card">
+                    <div class="my-ticket-code"><small>@ticket.Code</small><b>@ticket.Trip?.TrainCode</b></div>
+                    <div class="my-ticket-route">
+                        <b>@ticket.Trip?.Route?.StartStation?.Name → @ticket.Trip?.Route?.EndStation?.Name</b>
+                        <small>@ticket.Trip?.Departure.ToString("dd/MM/yyyy · HH:mm")</small>
+                    </div>
+                    <div class="my-ticket-seat">Toa @ticket.Seat?.Car?.Number<br /><b>Ghế @ticket.Seat?.Number</b></div>
+                    <span class="status-pill @(ticket.PaymentStatus == "DaThanhToan" ? "status-paid" : ticket.PaymentStatus == "ChoThanhToan" ? "status-pending" : "status-cancelled")">
+                        @(ticket.PaymentStatus == "DaThanhToan" ? "Đã thanh toán" : ticket.PaymentStatus == "ChoThanhToan" ? "Chờ thanh toán" : "Đã hủy")
+                    </span>
+                    <div class="ticket-row-actions">
+                        @if (ticket.PaymentStatus == "DaThanhToan")
+                        {
+                            <a class="button button-small button-outline" asp-action="ElectronicTicket" asp-route-id="@ticket.Id">Xem vé</a>
+                        }
+                        else if (ticket.PaymentStatus == "ChoThanhToan")
+                        {
+                            <a class="button button-small" asp-action="Payment" asp-route-id="@ticket.Id">Thanh toán</a>
+                        }
+                        @if (ticket.PaymentStatus != "DaHuy")
+                        {
+                            <form asp-action="CancelTicket" method="post">
+                                <input type="hidden" name="id" value="@ticket.Id" />
+                                <button class="link-button danger-link">Hủy vé</button>
+                            </form>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

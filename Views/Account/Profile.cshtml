@@ -1,0 +1,7 @@
+@model DbUser
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">TÀI KHOẢN CỦA BẠN</span><h1>Hồ sơ cá nhân</h1><p class="muted">Cập nhật thông tin liên hệ và giấy tờ cá nhân.</p></div></div>
+<div class="profile-layout"><aside class="panel profile-card"><div class="profile-avatar">@Model.Name.FirstOrDefault()</div><h3>@Model.Name</h3><p>@Model.Email</p><span class="status-pill status-paid">@Model.Role</span></aside><form class="panel form-panel" asp-action="UpdateProfile" method="post" data-ajax-check>@Html.AntiForgeryToken()<h2>Thông tin cá nhân</h2><label>Họ và tên<input name="name" value="@Model.Name" required/></label><label>Email<input value="@Model.Email" readonly/></label><label>Số điện thoại<input name="phone" value="@Model.Phone" required/></label><label>Số CCCD<input name="cccd" value="@Model.Cccd" required/></label><button class="button">Lưu thay đổi</button></form></div>
+</section>

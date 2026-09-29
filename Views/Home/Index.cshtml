@@ -1,0 +1,41 @@
+@model IReadOnlyList<TrainTrip>
+@{
+    ViewData["Title"] = "Tìm chuyến tàu";
+    var stations = (IReadOnlyList<Station>)ViewBag.Stations;
+    var search = (SearchInput)ViewBag.Search;
+}
+<section class="hero hero-home">
+    <div class="hero-shade"></div>
+    <div class="hero-copy"><span class="eyebrow eyebrow-light">HÀNH TRÌNH CỦA BẠN BẮT ĐẦU TỪ ĐÂY</span><h1>Đi tàu thong thả,<br />khám phá Việt Nam trọn vẹn.</h1><p>Ngắm nhìn đất nước qua ô cửa sổ và tận hưởng chuyến đi an toàn, thoải mái.</p></div>
+    <form class="search-card" asp-controller="Home" asp-action="Index" method="get" data-ajax-check>
+        <label>Ga đi<select name="FromStationId" required><option value="">Chọn ga đi</option>@foreach (var station in stations) { <option value="@station.Id" selected="@(search.FromStationId == station.Id)">@station.Name</option> }</select></label>
+        <span class="swap-icon">↔</span>
+        <label>Ga đến<select name="ToStationId" required><option value="">Chọn ga đến</option>@foreach (var station in stations) { <option value="@station.Id" selected="@(search.ToStationId == station.Id)">@station.Name</option> }</select></label>
+        <label>Ngày đi<input type="date" name="Date" value="@(search.Date?.ToString("yyyy-MM-dd"))" required /></label>
+        <button class="button">⌕ &nbsp;Tìm chuyến</button>
+    </form>
+</section>
+<section class="section-block">
+    <div class="section-heading"><div><span class="eyebrow">LỰA CHỌN HÀNH TRÌNH</span><h2>@(search.FromStationId.HasValue || search.ToStationId.HasValue ? "Kết quả tìm chuyến" : "Chuyến tàu sắp khởi hành")</h2><p class="muted">Chọn chuyến tàu phù hợp với lịch trình của bạn.</p></div><span class="result-count">@Model.Count chuyến</span></div>
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state"><span>🚆</span><h3>Chưa tìm thấy chuyến phù hợp</h3><p>Hãy thử chọn ga hoặc ngày đi khác.</p></div>
+    }
+    else
+    {
+        <div class="trip-list">
+            @foreach (var trip in Model)
+            {
+                <article class="trip-result-card">
+                    <div class="trip-code"><span class="train-icon">🚆</span><strong>@trip.TrainCode</strong><small>@trip.Route?.Name</small></div>
+                    <div class="station-time"><strong>@trip.Departure.ToString("HH:mm")</strong><span>@trip.Route?.StartStation?.Name</span><small>@trip.Departure.ToString("dd/MM/yyyy")</small></div>
+                    <div class="journey-line"><span>@((int)(trip.Arrival - trip.Departure).TotalHours) giờ</span><i></i><small>@trip.Route?.DistanceKm.ToString("N0") km</small></div>
+                    <div class="station-time"><strong>@trip.Arrival.ToString("HH:mm")</strong><span>@trip.Route?.EndStation?.Name</span><small>@trip.Arrival.ToString("dd/MM/yyyy")</small></div>
+                    <div class="trip-fare"><strong>@trip.BaseFare.ToString("N0")<small>đ</small></strong><span>Còn @trip.AvailableSeats chỗ</span></div>
+                    <a class="button button-small" asp-controller="Booking" asp-action="Seats" asp-route-tripId="@trip.Id">Chọn ghế</a>
+                </article>
+            }
+        </div>
+    }
+</section>
+<section class="popular-routes"><div class="section-heading"><div><span class="eyebrow">CẢM HỨNG DU LỊCH</span><h2>Tuyến đường được yêu thích</h2></div></div><div class="route-tiles"><article style="--route-img:url('/images/trains/train-2.jpg')"><b>Hà Nội → Đà Nẵng</b><span>Khám phá miền Trung</span></article><article style="--route-img:url('/images/trains/train-3.jpg')"><b>Sài Gòn → Nha Trang</b><span>Hành trình về biển xanh</span></article><article style="--route-img:url('/images/trains/train-1.jpg')"><b>Huế → Hà Nội</b><span>Di sản và văn hóa</span></article></div></section>

@@ -1,0 +1,9 @@
+@model TicketLookupInput
+@{
+    ViewData["Title"] = "Tra cứu vé";
+    var ticket = ViewBag.Ticket as TrainTicket;
+}
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">DÀNH CHO NHÂN VIÊN</span><h1>Tra cứu & xác minh vé</h1><p class="muted">Tra cứu vé bằng mã vé điện tử hoặc số CCCD hành khách.</p></div></div>
+<form asp-action="Lookup" method="post" class="panel lookup-form" data-ajax-check>@Html.AntiForgeryToken()<div asp-validation-summary="ModelOnly" class="validation-summary"></div><label>Mã vé hoặc số CCCD<input asp-for="Query" placeholder="VD: VE-SE1-001 hoặc 001199000003" required/></label><span asp-validation-for="Query" class="field-error"></span><button class="button">⌕ &nbsp;Tra cứu</button></form>
+@if (ticket is not null) { <article class="panel staff-ticket"><div class="section-heading"><div><span class="eyebrow">KẾT QUẢ TRA CỨU</span><h2>Vé @ticket.Code</h2></div><span class="status-pill @(ticket.PaymentStatus == "DaThanhToan" ? "status-paid" : "status-pending")">@(ticket.PaymentStatus == "DaThanhToan" ? "Đã thanh toán" : "Chờ thanh toán")</span></div><div class="ticket-details"><span>Hành khách <b>@ticket.PassengerName</b></span><span>CCCD <b>@ticket.PassengerCccd</b></span><span>Chuyến <b>@ticket.Trip?.TrainCode · @ticket.Trip?.Route?.Name</b></span><span>Khởi hành <b>@ticket.Trip?.Departure.ToString("dd/MM/yyyy HH:mm")</b></span><span>Toa / ghế <b>@ticket.Seat?.Car?.Number / @ticket.Seat?.Number</b></span><span>Giá vé <b>@ticket.Fare.ToString("N0") đ</b></span></div>@if (ticket.PaymentStatus == "ChoThanhToan") { <form asp-action="Confirm" method="post"><input type="hidden" name="id" value="@ticket.Id"/><button class="button">Xác nhận thanh toán</button></form> }</article> }
+</section>

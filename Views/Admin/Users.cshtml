@@ -1,0 +1,54 @@
+@model IReadOnlyList<DbUser>
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+}
+<section class="section-block admin-content">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">QUẢN TRỊ TÀI KHOẢN</span>
+            <h1>Quản lý người dùng</h1>
+            <p class="muted">Danh sách tài khoản được lấy trực tiếp từ cơ sở dữ liệu.</p>
+        </div>
+        <span class="result-count">@Model.Count người dùng</span>
+    </div>
+    <div class="panel table-panel">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Người dùng</th><th>Email / điện thoại</th><th>Ngày tạo</th><th>Vai trò</th><th>Trạng thái</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        var formId = $"user-{user.Id}";
+                        <tr>
+                            <td>
+                                <form id="@formId" asp-action="UpdateUser" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Id" value="@user.Id" />
+                                </form>
+                                <div class="user-cell"><span class="avatar">@user.Name.FirstOrDefault()</span><b>@user.Name</b></div>
+                            </td>
+                            <td>@user.Email<br /><small>@user.Phone</small></td>
+                            <td>@user.Created?.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <select form="@formId" name="Role">
+                                    <option value="Admin" selected="@(user.Role == "Admin")">Admin</option>
+                                    <option value="NhanVien" selected="@(user.Role == "NhanVien")">Nhân viên</option>
+                                    <option value="KhachHang" selected="@(user.Role == "KhachHang")">Khách hàng</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select form="@formId" name="Status">
+                                    <option value="HoatDong" selected="@(user.Status == "HoatDong")">Hoạt động</option>
+                                    <option value="BiKhoa" selected="@(user.Status == "BiKhoa")">Đã khóa</option>
+                                </select>
+                            </td>
+                            <td><button form="@formId" class="link-button">Lưu</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
