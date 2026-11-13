@@ -20,6 +20,12 @@ public sealed class BookingController(TrainTicketDbContext db) : Controller
             return NotFound();
         }
 
+        if (trip.Status != "HoatDong" || trip.Departure <= DateTime.Now)
+        {
+            TempData["Error"] = "Chuyến tàu này hiện đang tạm dừng hoặc đã khởi hành.";
+            return RedirectToAction("Index", "Home");
+        }
+
         ViewBag.Trip = trip;
         ViewBag.Cars = await db.Cars.AsNoTracking()
             .Where(car => car.TripId == tripId)
@@ -33,6 +39,13 @@ public sealed class BookingController(TrainTicketDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Hold(int tripId, int seatId)
     {
+        var trip = await db.Trips.FindAsync(tripId);
+        if (trip is null || trip.Status != "HoatDong" || trip.Departure <= DateTime.Now)
+        {
+            TempData["Error"] = "Chuyến tàu này đã tạm dừng hoặc đã khởi hành.";
+            return RedirectToAction("Index", "Home");
+        }
+
         var userId = CurrentUserId();
         var seat = await db.Seats.Include(item => item.Car)
             .FirstOrDefaultAsync(item => item.Id == seatId && item.Car!.TripId == tripId);
@@ -96,9 +109,10 @@ public sealed class BookingController(TrainTicketDbContext db) : Controller
         }
 
         var trip = await db.Trips.FindAsync(input.TripId);
-        if (trip is null)
+        if (trip is null || trip.Status != "HoatDong")
         {
-            return NotFound();
+            TempData["Error"] = "Chuyến tàu không khả dụng.";
+            return RedirectToAction("Index", "Home");
         }
 
         var ticket = new TrainTicket
@@ -112,6 +126,7 @@ public sealed class BookingController(TrainTicketDbContext db) : Controller
             PassengerCccd = input.Cccd.Trim(),
             Fare = trip.BaseFare,
             PaymentStatus = "ChoThanhToan",
+            BoardingStatus = "ChuaSoat",
             BookedAt = DateTime.Now
         };
 
@@ -187,12 +202,27 @@ public sealed class BookingController(TrainTicketDbContext db) : Controller
             .Include(item => item.Seat)
             .Include(item => item.Trip)
             .FirstOrDefaultAsync(item => item.Id == id && item.UserId == CurrentUserId());
+
         if (ticket is null || ticket.PaymentStatus == "DaHuy")
         {
             return NotFound();
         }
 
+        if (ticket.BoardingStatus == "DaLenTau")
+        {
+            TempData["Error"] = "Vé đã được soát lên tàu, không thể hủy.";
+            return RedirectToAction(nameof(MyTickets));
+        }
+
+        if (ticket.Trip is not null && ticket.Trip.Departure <= DateTime.Now.AddHours(2))
+        {
+            TempData["Error"] = "Không thể hủy vé khi thời gian còn dưới 2 tiếng trước giờ tàu khởi hành.";
+            return RedirectToAction(nameof(MyTickets));
+        }
+
+        var wasPaid = ticket.PaymentStatus == "DaThanhToan";
         ticket.PaymentStatus = "DaHuy";
+
         if (ticket.Seat is not null)
         {
             ticket.Seat.Status = "Trong";
@@ -200,13 +230,13 @@ public sealed class BookingController(TrainTicketDbContext db) : Controller
             ticket.Seat.HeldByUserId = null;
         }
 
-        if (ticket.Trip is not null)
+        if (wasPaid && ticket.Trip is not null)
         {
             ticket.Trip.AvailableSeats = Math.Min(ticket.Trip.SeatCount, ticket.Trip.AvailableSeats + 1);
         }
 
         await db.SaveChangesAsync();
-        TempData["Success"] = "Vé đã được hủy.";
+        TempData["Success"] = "Vé đã được hủy thành công.";
         return RedirectToAction(nameof(MyTickets));
     }
 

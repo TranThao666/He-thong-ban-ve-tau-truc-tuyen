@@ -40,22 +40,32 @@
                         @(ticket.PaymentStatus == "DaThanhToan" ? "Đã thanh toán" : ticket.PaymentStatus == "ChoThanhToan" ? "Chờ thanh toán" : "Đã hủy")
                     </span>
                     <div class="ticket-row-actions">
-                        @if (ticket.PaymentStatus == "DaThanhToan")
+                    @if (ticket.PaymentStatus == "DaThanhToan")
+                    {
+                        <a class="button button-small button-outline" asp-action="ElectronicTicket" asp-route-id="@ticket.Id">Xem vé</a>
+                    }
+                    else if (ticket.PaymentStatus == "ChoThanhToan")
+                    {
+                        <a class="button button-small" asp-action="Payment" asp-route-id="@ticket.Id">Thanh toán</a>
+                    }
+
+                    @if (ticket.PaymentStatus != "DaHuy" && ticket.BoardingStatus != "DaLenTau")
+                    {
+                        var canCancel = ticket.Trip != null && ticket.Trip.Departure > DateTime.Now.AddHours(2);
+                        if (canCancel)
                         {
-                            <a class="button button-small button-outline" asp-action="ElectronicTicket" asp-route-id="@ticket.Id">Xem vé</a>
-                        }
-                        else if (ticket.PaymentStatus == "ChoThanhToan")
-                        {
-                            <a class="button button-small" asp-action="Payment" asp-route-id="@ticket.Id">Thanh toán</a>
-                        }
-                        @if (ticket.PaymentStatus != "DaHuy")
-                        {
-                            <form asp-action="CancelTicket" method="post">
+                            <form asp-action="CancelTicket" method="post" onsubmit="return confirm('Bạn chắc chắn muốn hủy vé này?');">
+                                @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@ticket.Id" />
                                 <button class="link-button danger-link">Hủy vé</button>
                             </form>
                         }
-                    </div>
+                        else
+                        {
+                            <small class="muted" title="Chỉ được hủy vé trước giờ khởi hành ít nhất 2 tiếng">Quá hạn hủy (&lt;2h)</small>
+                        }
+                    }
+                </div>
                 </article>
             }
         </div>

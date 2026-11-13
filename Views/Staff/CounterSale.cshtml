@@ -1,0 +1,88 @@
+@model CounterBookingInput
+@{
+    ViewData["Title"] = "Bán vé tại quầy";
+    var trips = (IReadOnlyList<TrainTrip>)ViewBag.Trips;
+    var selectedTrip = ViewBag.SelectedTrip as TrainTrip;
+    var cars = ViewBag.Cars as IReadOnlyList<TrainCar> ?? [];
+}
+<section class="section-block">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">QUẦY VÉ NHÀ GA</span>
+            <h1>Đặt vé nhanh hộ khách tại quầy</h1>
+            <p class="muted">Chọn chuyến, chọn ghế trống và xuất vé thanh toán trực tiếp cho hành khách.</p>
+        </div>
+        <a class="button button-outline" asp-action="Lookup">▣ Quay lại soát vé</a>
+    </div>
+
+    <!-- Bước 1: Chọn chuyến tàu -->
+    <form asp-action="CounterSale" method="get" class="panel form-panel" style="margin-bottom:1.5rem;">
+        <label>Chọn chuyến tàu đang mở bán
+            <select name="tripId" onchange="this.form.submit()">
+                @foreach (var t in trips)
+                {
+                    <option value="@t.Id" selected="@(selectedTrip?.Id == t.Id)">
+                        @t.TrainCode | @t.Route?.StartStation?.Name → @t.Route?.EndStation?.Name | Khởi hành: @t.Departure.ToString("dd/MM/yyyy HH:mm") | Giá: @t.BaseFare.ToString("N0") đ (Còn @t.AvailableSeats ghế)
+                    </option>
+                }
+            </select>
+        </label>
+    </form>
+
+    @if (selectedTrip is not null)
+    {
+        <form asp-action="CounterSale" method="post" class="passenger-layout">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="TripId" value="@selectedTrip.Id" />
+
+            <!-- Sơ đồ chọn ghế nhanh -->
+            <div class="car-grid">
+                @foreach (var car in cars)
+                {
+                    <article class="car-panel">
+                        <div class="car-title"><b>Toa @car.Number · @car.Name</b><span>@car.SeatType</span></div>
+                        <div class="seat-grid">
+                            @foreach (var seat in car.Seats.OrderBy(s => s.Number))
+                            {
+                                var locked = seat.Status == "DaBan" || (seat.Status == "DangGiu" && seat.HeldAt >= DateTime.Now.AddMinutes(-15));
+                                if (locked)
+                                {
+                                    <span class="seat seat-@seat.Status" title="Đã bán / Đang giữ">@seat.Number</span>
+                                }
+                                else
+                                {
+                                    <label class="seat seat-available" style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:2px;">
+                                        <input type="radio" name="SeatId" value="@seat.Id" required />
+                                        <span>@seat.Number</span>
+                                    </label>
+                                }
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <!-- Thông tin hành khách & Xuất vé -->
+            <aside class="panel form-panel">
+                <span class="eyebrow">THÔNG TIN XUẤT VÉ</span>
+                <h3>@selectedTrip.TrainCode · @selectedTrip.Route?.Name</h3>
+                <p class="muted">Giá vé: <b>@selectedTrip.BaseFare.ToString("N0") đ</b></p>
+
+                <label>Họ tên hành khách<input asp-for="PassengerName" placeholder="Nhập họ tên theo CCCD" required /></label>
+                <label>Số CCCD / Giấy tờ<input asp-for="PassengerCccd" placeholder="Nhập số CCCD" required /></label>
+                <label>Hình thức thu tiền
+                    <select asp-for="PaymentMethod">
+                        <option value="TienMat">Tiền mặt tại quầy</option>
+                        <option value="ChuyenKhoan">Chuyển khoản / QR Quầy</option>
+                    </select>
+                </label>
+
+                <button class="button button-block">Xuất vé & Xác nhận thanh toán</button>
+            </aside>
+        </form>
+    }
+    else
+    {
+        <div class="empty-state"><h3>Hiện không có chuyến tàu nào đang mở bán.</h3></div>
+    }
+</section>

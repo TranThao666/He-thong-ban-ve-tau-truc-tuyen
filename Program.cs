@@ -17,6 +17,7 @@ builder.Services
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
     });
 builder.Services.AddAuthorization();
+builder.Services.AddHostedService<BTL_TrainTicketApp.Services.SeatReleaseBackgroundService>();
 
 var app = builder.Build();
 

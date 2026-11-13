@@ -1,9 +1,72 @@
 @model TicketLookupInput
 @{
-    ViewData["Title"] = "Tra cứu vé";
+    ViewData["Title"] = "Soát vé & Tra cứu";
     var ticket = ViewBag.Ticket as TrainTicket;
 }
-<section class="section-block"><div class="section-heading"><div><span class="eyebrow">DÀNH CHO NHÂN VIÊN</span><h1>Tra cứu & xác minh vé</h1><p class="muted">Tra cứu vé bằng mã vé điện tử hoặc số CCCD hành khách.</p></div></div>
-<form asp-action="Lookup" method="post" class="panel lookup-form" data-ajax-check>@Html.AntiForgeryToken()<div asp-validation-summary="ModelOnly" class="validation-summary"></div><label>Mã vé hoặc số CCCD<input asp-for="Query" placeholder="VD: VE-SE1-001 hoặc 001199000003" required/></label><span asp-validation-for="Query" class="field-error"></span><button class="button">⌕ &nbsp;Tra cứu</button></form>
-@if (ticket is not null) { <article class="panel staff-ticket"><div class="section-heading"><div><span class="eyebrow">KẾT QUẢ TRA CỨU</span><h2>Vé @ticket.Code</h2></div><span class="status-pill @(ticket.PaymentStatus == "DaThanhToan" ? "status-paid" : "status-pending")">@(ticket.PaymentStatus == "DaThanhToan" ? "Đã thanh toán" : "Chờ thanh toán")</span></div><div class="ticket-details"><span>Hành khách <b>@ticket.PassengerName</b></span><span>CCCD <b>@ticket.PassengerCccd</b></span><span>Chuyến <b>@ticket.Trip?.TrainCode · @ticket.Trip?.Route?.Name</b></span><span>Khởi hành <b>@ticket.Trip?.Departure.ToString("dd/MM/yyyy HH:mm")</b></span><span>Toa / ghế <b>@ticket.Seat?.Car?.Number / @ticket.Seat?.Number</b></span><span>Giá vé <b>@ticket.Fare.ToString("N0") đ</b></span></div>@if (ticket.PaymentStatus == "ChoThanhToan") { <form asp-action="Confirm" method="post"><input type="hidden" name="id" value="@ticket.Id"/><button class="button">Xác nhận thanh toán</button></form> }</article> }
+<section class="section-block narrow-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">NGHIỆP VỤ NHÀ GA</span>
+            <h1>Tra cứu & Soát vé lên tàu</h1>
+            <p class="muted">Nhập mã vé điện tử, nội dung QR hoặc số CCCD hành khách.</p>
+        </div>
+        <a class="button button-outline" asp-action="CounterSale">+ Bán vé tại quầy</a>
+    </div>
+
+    <form asp-action="Lookup" method="post" class="panel form-panel" style="margin-bottom:1.5rem;">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <label>Mã vé / Mã QR / Số CCCD
+            <input asp-for="Query" placeholder="Ví dụ: VE-SE1-... hoặc 001199000003" required autofocus />
+        </label>
+        <span asp-validation-for="Query" class="field-error"></span>
+        <button class="button">Tra cứu thông tin</button>
+    </form>
+
+    @if (ticket is not null)
+    {
+        <div class="panel" style="padding:1.5rem;">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">THÔNG TIN VÉ ĐIỆN TỬ</span>
+                    <h2>@ticket.Code · Tàu @ticket.Trip?.TrainCode</h2>
+                    <p class="muted">@ticket.Trip?.Route?.StartStation?.Name → @ticket.Trip?.Route?.EndStation?.Name</p>
+                </div>
+                <div style="display:flex; gap:0.5rem; flex-direction:column; align-items:flex-end;">
+                    <span class="status-pill @(ticket.PaymentStatus == "DaThanhToan" ? "status-paid" : ticket.PaymentStatus == "ChoThanhToan" ? "status-pending" : "status-cancelled")">
+                        @(ticket.PaymentStatus == "DaThanhToan" ? "Đã thanh toán" : ticket.PaymentStatus == "ChoThanhToan" ? "Chờ thanh toán" : "Đã hủy")
+                    </span>
+                    <span class="status-pill @(ticket.BoardingStatus == "DaLenTau" ? "status-paid" : "status-pending")">
+                        @(ticket.BoardingStatus == "DaLenTau" ? $"Đã lên tàu ({ticket.BoardedAt:HH:mm dd/MM})" : "Chưa soát lên tàu")
+                    </span>
+                </div>
+            </div>
+
+            <div class="summary-row"><span>Hành khách</span><b>@ticket.PassengerName</b></div>
+            <div class="summary-row"><span>Số CCCD</span><b>@ticket.PassengerCccd</b></div>
+            <div class="summary-row"><span>Khởi hành</span><b>@ticket.Trip?.Departure.ToString("dd/MM/yyyy HH:mm")</b></div>
+            <div class="summary-row"><span>Vị trí chỗ</span><b>Toa @ticket.Seat?.Car?.Number · Ghế @ticket.Seat?.Number</b></div>
+            <div class="summary-row"><span>Giá vé</span><b>@ticket.Fare.ToString("N0") đ</b></div>
+
+            <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+                @if (ticket.PaymentStatus == "ChoThanhToan")
+                {
+                    <form asp-action="Confirm" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@ticket.Id" />
+                        <button class="button">✓ Xác nhận thu tiền tại quầy</button>
+                    </form>
+                }
+
+                @if (ticket.PaymentStatus == "DaThanhToan" && ticket.BoardingStatus != "DaLenTau")
+                {
+                    <form asp-action="CheckInBoarding" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@ticket.Id" />
+                        <button class="button">🚆 Xác nhận soát vé lên tàu</button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
 </section>

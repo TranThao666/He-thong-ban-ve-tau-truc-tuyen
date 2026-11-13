@@ -82,3 +82,4 @@ C:\Users\Thao\Downloads\BTL_TrainTicketApp\BTL_TrainTicketApp\obj\Debug\net10.0\
 C:\Users\Thao\Downloads\BTL_TrainTicketApp\BTL_TrainTicketApp\obj\Debug\net10.0\BTL_TrainTicketApp.pdb
 C:\Users\Thao\Downloads\BTL_TrainTicketApp\BTL_TrainTicketApp\obj\Debug\net10.0\BTL_TrainTicketApp.genruntimeconfig.cache
 C:\Users\Thao\Downloads\BTL_TrainTicketApp\BTL_TrainTicketApp\obj\Debug\net10.0\ref\BTL_TrainTicketApp.dll
+C:\Users\Thao\Downloads\BTL_TrainTicketApp\BTL_TrainTicketApp\obj\Debug\net10.0\BTL_TrainTicketApp.sourcelink.json

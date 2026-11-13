@@ -160,4 +160,32 @@ public sealed class AccountController(TrainTicketDbContext db) : Controller
         return new PasswordHasher<DbUser>()
             .VerifyHashedPassword(user, user.Password, password) != PasswordVerificationResult.Failed;
     }
+[HttpPost]
+[Microsoft.AspNetCore.Authorization.Authorize]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> ChangePassword(ChangePasswordInput input)
+{
+    if (!ModelState.IsValid)
+    {
+        TempData["Error"] = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage ?? "Dữ liệu không hợp lệ.";
+        return RedirectToAction(nameof(Profile));
+    }
+
+    var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    var user = await db.Users.FindAsync(id);
+    if (user is null) return NotFound();
+
+    if (!PasswordMatches(user, input.CurrentPassword))
+    {
+        TempData["Error"] = "Mật khẩu hiện tại không chính xác.";
+        return RedirectToAction(nameof(Profile));
+    }
+
+    user.Password = new PasswordHasher<DbUser>().HashPassword(user, input.NewPassword);
+    await db.SaveChangesAsync();
+
+    TempData["Success"] = "Đổi mật khẩu thành công.";
+    return RedirectToAction(nameof(Profile));
+}
+
 }

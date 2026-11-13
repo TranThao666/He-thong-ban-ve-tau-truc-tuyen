@@ -12,6 +12,7 @@ public sealed class TrainTicketDbContext(DbContextOptions<TrainTicketDbContext> 
     public DbSet<TrainCar> Cars => Set<TrainCar>();
     public DbSet<Seat> Seats => Set<Seat>();
     public DbSet<TrainTicket> Tickets => Set<TrainTicket>();
+    public DbSet<StatisticalReport> Reports => Set<StatisticalReport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -114,14 +115,34 @@ public sealed class TrainTicketDbContext(DbContextOptions<TrainTicketDbContext> 
             entity.Property(ticket => ticket.PassengerCccd).HasColumnName("sCccdHanhKhach").HasMaxLength(20).IsRequired();
             entity.Property(ticket => ticket.Fare).HasColumnName("fGiaVe").HasColumnType("decimal(18,0)");
             entity.Property(ticket => ticket.PaymentStatus).HasColumnName("sTrangThaiThanhToan").HasMaxLength(30).IsRequired();
+            entity.Property(ticket => ticket.BoardingStatus).HasColumnName("sTrangThaiSoatVe").HasMaxLength(30).IsRequired();
             entity.Property(ticket => ticket.BookedAt).HasColumnName("dNgayDat");
             entity.Property(ticket => ticket.PaidAt).HasColumnName("dNgayThanhToan");
+            entity.Property(ticket => ticket.BoardedAt).HasColumnName("dThoiGianSoatVe");
             entity.Property(ticket => ticket.ConfirmedByUserId).HasColumnName("fk_nhanVienXacNhanID");
             entity.HasIndex(ticket => ticket.Code).IsUnique();
             entity.HasOne(ticket => ticket.User).WithMany(user => user.Tickets).HasForeignKey(ticket => ticket.UserId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(ticket => ticket.Trip).WithMany(trip => trip.Tickets).HasForeignKey(ticket => ticket.TripId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(ticket => ticket.Seat).WithMany(seat => seat.Tickets).HasForeignKey(ticket => ticket.SeatId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(ticket => ticket.ConfirmedByUser).WithMany().HasForeignKey(ticket => ticket.ConfirmedByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<StatisticalReport>(entity =>
+        {
+            entity.ToTable("tblBaoCaoThongKe");
+            entity.HasKey(report => report.Id);
+            entity.Property(report => report.Id).HasColumnName("baocao_id");
+            entity.Property(report => report.Title).HasColumnName("sTieuDe").HasMaxLength(200).IsRequired();
+            entity.Property(report => report.ReportType).HasColumnName("sLoaiBaoCao").HasMaxLength(50);
+            entity.Property(report => report.FromDate).HasColumnName("dTungay").HasColumnType("date");
+            entity.Property(report => report.ToDate).HasColumnName("dDenngay").HasColumnType("date");
+            entity.Property(report => report.AdminId).HasColumnName("fk_adminLapID");
+            entity.Property(report => report.TotalSold).HasColumnName("iTongVeBan");
+            entity.Property(report => report.TotalCancelled).HasColumnName("iTongVeHuy");
+            entity.Property(report => report.TotalRevenue).HasColumnName("fTongDoanhThu").HasColumnType("decimal(18,0)");
+            entity.Property(report => report.OccupancyRate).HasColumnName("fTyLeLapDay");
+            entity.Property(report => report.FileName).HasColumnName("sTepBaoCao").HasMaxLength(255);
+            entity.Property(report => report.CreatedAt).HasColumnName("dNgayLap");
+            entity.HasOne(report => report.Admin).WithMany().HasForeignKey(report => report.AdminId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

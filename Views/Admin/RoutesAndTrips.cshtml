@@ -1,12 +1,153 @@
 @{
-    ViewData["Title"] = "Quản lý tuyến và chuyến tàu";
+    ViewData["Title"] = "Quản lý nhà ga, tuyến và chuyến tàu";
     var stations = (IReadOnlyList<Station>)ViewBag.Stations;
     var routes = (IReadOnlyList<RailRoute>)ViewBag.Routes;
     var trips = (IReadOnlyList<TrainTrip>)ViewBag.Trips;
+    var activeStations = stations.Where(s => s.Status == "HoatDong").ToList();
 }
-<section class="section-block admin-content"><div class="section-heading"><div><span class="eyebrow">DỮ LIỆU VẬN HÀNH</span><h1>Tuyến & chuyến tàu</h1><p class="muted">Tạo tuyến đường và lịch chạy từ dữ liệu nhà ga.</p></div></div>
-<div class="admin-form-grid"><form asp-action="CreateRoute" method="post" class="panel form-panel" data-ajax-check>@Html.AntiForgeryToken()<h2>Thêm tuyến đường</h2><label>Tên tuyến<input name="Name" required placeholder="Hà Nội - Đà Nẵng"/></label><label>Ga đi<select name="StartStationId" required><option value="">Chọn ga đi</option>@foreach(var station in stations){<option value="@station.Id">@station.Name</option>}</select></label><label>Ga đến<select name="EndStationId" required><option value="">Chọn ga đến</option>@foreach(var station in stations){<option value="@station.Id">@station.Name</option>}</select></label><label>Khoảng cách (km)<input type="number" name="DistanceKm" min="1" required/></label><button class="button">Tạo tuyến</button></form>
-<form asp-action="CreateTrip" method="post" class="panel form-panel" data-ajax-check>@Html.AntiForgeryToken()<h2>Thêm chuyến tàu</h2><label>Mã tàu<input name="TrainCode" required placeholder="SE7"/></label><label>Tuyến<select name="RouteId" required><option value="">Chọn tuyến</option>@foreach(var route in routes){<option value="@route.Id">@route.Name</option>}</select></label><div class="form-row"><div><label>Khởi hành<input type="datetime-local" name="Departure" required/></label></div><div><label>Đến nơi<input type="datetime-local" name="Arrival" required/></label></div></div><div class="form-row"><div><label>Giá vé<input type="number" name="Fare" min="1" required/></label></div><div><label>Tổng số ghế<input type="number" name="SeatCount" min="1" value="40" required/></label></div></div><button class="button">Tạo chuyến & sơ đồ ghế</button></form></div>
-<div class="panel table-panel"><div class="section-heading"><h2>Danh sách tuyến</h2><span class="result-count">@routes.Count tuyến</span></div><div class="table-wrap"><table><thead><tr><th>Tên tuyến</th><th>Ga đi</th><th>Ga đến</th><th>Khoảng cách</th><th>Trạng thái</th></tr></thead><tbody>@foreach(var route in routes){<tr><td><b>@route.Name</b></td><td>@route.StartStation?.Name</td><td>@route.EndStation?.Name</td><td>@route.DistanceKm km</td><td><span class="status-pill status-paid">Đang hoạt động</span></td></tr>}</tbody></table></div></div>
-<div class="panel table-panel"><div class="section-heading"><h2>Lịch chạy tàu</h2><span class="result-count">@trips.Count chuyến</span></div><div class="table-wrap"><table><thead><tr><th>Mã tàu</th><th>Tuyến</th><th>Khởi hành</th><th>Đến</th><th>Giá</th><th>Ghế trống</th><th>Trạng thái</th></tr></thead><tbody>@foreach(var trip in trips){<tr><td><b>@trip.TrainCode</b></td><td>@trip.Route?.Name</td><td>@trip.Departure.ToString("dd/MM/yy HH:mm")</td><td>@trip.Arrival.ToString("dd/MM/yy HH:mm")</td><td>@trip.BaseFare.ToString("N0") đ</td><td>@trip.AvailableSeats / @trip.SeatCount</td><td><span class="status-pill status-paid">@trip.Status</span></td></tr>}</tbody></table></div></div>
+<section class="section-block admin-content">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">DỮ LIỆU VẬN HÀNH</span>
+            <h1>Nhà ga, Tuyến & Chuyến tàu</h1>
+            <p class="muted">Quản trị danh mục nhà ga, tuyến đường và lịch trình tàu.</p>
+        </div>
+    </div>
+
+    <!-- 3 FORM THÊM MỚI -->
+    <div class="admin-form-grid">
+        <form asp-action="CreateStation" method="post" class="panel form-panel">
+            @Html.AntiForgeryToken()
+            <h2>Thêm nhà ga</h2>
+            <div class="form-row">
+                <div><label>Tên ga<input name="Name" required placeholder="Ga Huế" /></label></div>
+                <div><label>Mã ga<input name="Code" required placeholder="HUE" /></label></div>
+            </div>
+            <label>Thành phố / Tỉnh<input name="City" placeholder="Thừa Thiên Huế" /></label>
+            <label>Địa chỉ<input name="Address" placeholder="02 Bùi Thị Xuân" /></label>
+            <button class="button">Thêm nhà ga</button>
+        </form>
+
+        <form asp-action="CreateRoute" method="post" class="panel form-panel">
+            @Html.AntiForgeryToken()
+            <h2>Thêm tuyến đường</h2>
+            <label>Tên tuyến<input name="Name" required placeholder="Hà Nội - Đà Nẵng" /></label>
+            <label>Ga đi<select name="StartStationId" required><option value="">Chọn ga đi</option>@foreach (var s in activeStations) { <option value="@s.Id">@s.Name (@s.Code)</option> }</select></label>
+            <label>Ga đến<select name="EndStationId" required><option value="">Chọn ga đến</option>@foreach (var s in activeStations) { <option value="@s.Id">@s.Name (@s.Code)</option> }</select></label>
+            <label>Khoảng cách (km)<input type="number" name="DistanceKm" min="1" required /></label>
+            <button class="button">Tạo tuyến</button>
+        </form>
+
+        <form asp-action="CreateTrip" method="post" class="panel form-panel">
+            @Html.AntiForgeryToken()
+            <h2>Thêm chuyến tàu</h2>
+            <label>Mã tàu<input name="TrainCode" required placeholder="SE7" /></label>
+            <label>Tuyến<select name="RouteId" required><option value="">Chọn tuyến</option>@foreach (var r in routes) { <option value="@r.Id">@r.Name</option> }</select></label>
+            <div class="form-row">
+                <div><label>Khởi hành<input type="datetime-local" name="Departure" required /></label></div>
+                <div><label>Đến nơi<input type="datetime-local" name="Arrival" required /></label></div>
+            </div>
+            <div class="form-row">
+                <div><label>Giá vé<input type="number" name="Fare" min="1" required /></label></div>
+                <div><label>Tổng số ghế<input type="number" name="SeatCount" min="1" value="40" required /></label></div>
+            </div>
+            <button class="button">Tạo chuyến & sơ đồ ghế</button>
+        </form>
+    </div>
+
+    <!-- BẢNG QUẢN LÝ NHÀ GA (SỬA / KHÓA) -->
+    <div class="panel table-panel">
+        <div class="section-heading"><h2>Danh mục Nhà ga</h2><span class="result-count">@stations.Count nhà ga</span></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Mã ga</th><th>Tên nhà ga</th><th>Thành phố</th><th>Địa chỉ</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var st in stations)
+                    {
+                        var stForm = $"st-{st.Id}";
+                        <tr>
+                            <td>
+                                <form id="@stForm" asp-action="UpdateStation" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Id" value="@st.Id" />
+                                </form>
+                                <input form="@stForm" name="Code" value="@st.Code" style="width:80px;" required />
+                            </td>
+                            <td><input form="@stForm" name="Name" value="@st.Name" required /></td>
+                            <td><input form="@stForm" name="City" value="@st.City" /></td>
+                            <td><input form="@stForm" name="Address" value="@st.Address" /></td>
+                            <td>
+                                <span class="status-pill @(st.Status == "HoatDong" ? "status-paid" : "status-cancelled")">
+                                    @(st.Status == "HoatDong" ? "Hoạt động" : "Đã khóa")
+                                </span>
+                            </td>
+                            <td style="display:flex; gap:0.5rem; align-items:center;">
+                                <button form="@stForm" class="link-button">Lưu</button>
+                                <form asp-action="ToggleStationStatus" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@st.Id" />
+                                    <button class="link-button danger-link">@(st.Status == "HoatDong" ? "Khóa" : "Mở")</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- BẢNG QUẢN LÝ CHUYẾN TÀU (SỬA / TẠM DỪNG) -->
+    <div class="panel table-panel">
+        <div class="section-heading"><h2>Lịch chạy tàu</h2><span class="result-count">@trips.Count chuyến</span></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Mã tàu</th><th>Tuyến</th><th>Khởi hành</th><th>Đến nơi</th><th>Giá vé</th><th>Ghế trống</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var trip in trips)
+                    {
+                        var trForm = $"tr-{trip.Id}";
+                        <tr>
+                            <td>
+                                <form id="@trForm" asp-action="UpdateTrip" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Id" value="@trip.Id" />
+                                    <input type="hidden" name="Status" value="@trip.Status" />
+                                </form>
+                                <input form="@trForm" name="TrainCode" value="@trip.TrainCode" style="width:80px;" required />
+                            </td>
+                            <td>
+                                <select form="@trForm" name="RouteId">
+                                    @foreach (var r in routes)
+                                    {
+                                        <option value="@r.Id" selected="@(trip.RouteId == r.Id)">@r.Name</option>
+                                    }
+                                </select>
+                            </td>
+                            <td><input form="@trForm" type="datetime-local" name="Departure" value="@trip.Departure.ToString("yyyy-MM-ddTHH:mm")" required /></td>
+                            <td><input form="@trForm" type="datetime-local" name="Arrival" value="@trip.Arrival.ToString("yyyy-MM-ddTHH:mm")" required /></td>
+                            <td><input form="@trForm" type="number" name="Fare" value="@trip.BaseFare" style="width:110px;" required /></td>
+                            <td>@trip.AvailableSeats / @trip.SeatCount</td>
+                            <td>
+                                <span class="status-pill @(trip.Status == "HoatDong" ? "status-paid" : "status-cancelled")">
+                                    @(trip.Status == "HoatDong" ? "Hoạt động" : "Tạm dừng")
+                                </span>
+                            </td>
+                            <td style="display:flex; gap:0.5rem; align-items:center;">
+                                <button form="@trForm" class="link-button">Lưu</button>
+                                <form asp-action="ToggleTripStatus" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@trip.Id" />
+                                    <button class="link-button danger-link">@(trip.Status == "HoatDong" ? "Tạm dừng" : "Mở bán")</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </section>

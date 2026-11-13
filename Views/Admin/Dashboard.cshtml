@@ -1,9 +1,95 @@
 @{
     ViewData["Title"] = "Tổng quan vận hành";
     var trips = (IReadOnlyList<TrainTrip>)ViewBag.RecentTrips;
+    var reports = (IReadOnlyList<StatisticalReport>)ViewBag.SavedReports;
+    var fromDate = ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd");
+    var toDate = ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd");
 }
-<section class="section-block admin-content"><div class="section-heading"><div><span class="eyebrow">BẢNG ĐIỀU KHIỂN</span><h1>Tổng quan vận hành</h1><p class="muted">Tình hình kinh doanh và vận hành hệ thống vé tàu.</p></div><span class="date-chip">@DateTime.Today.ToString("dd/MM/yyyy")</span></div>
-<div class="metric-grid"><article><span>Người dùng</span><b>@ViewBag.Users</b><small>Tài khoản hệ thống</small></article><article><span>Chuyến tàu</span><b>@ViewBag.Trips</b><small>Lịch trình đã tạo</small></article><article><span>Vé đã bán</span><b>@ViewBag.Paid</b><small>Đã xác nhận thanh toán</small></article><article><span>Doanh thu</span><b>@(((decimal)ViewBag.Revenue).ToString("N0")) đ</b><small>Vé đã thanh toán</small></article></div>
-<div class="admin-shortcuts"><a asp-action="RoutesAndTrips">＋ Quản lý tuyến và chuyến</a><a asp-action="Users">♙ Quản lý người dùng</a><a asp-controller="Staff" asp-action="Lookup">▣ Tra cứu vé</a></div>
-<div class="panel table-panel"><div class="section-heading"><div><h2>Lịch tàu sắp tới</h2><p class="muted">Các chuyến tàu đang được mở bán.</p></div><a class="text-link" asp-action="RoutesAndTrips">Quản lý lịch tàu →</a></div><div class="table-wrap"><table><thead><tr><th>Mã tàu</th><th>Tuyến</th><th>Khởi hành</th><th>Đến nơi</th><th>Giá vé</th><th>Ghế trống</th></tr></thead><tbody>@foreach (var trip in trips) { <tr><td><b>@trip.TrainCode</b></td><td>@trip.Route?.Name</td><td>@trip.Departure.ToString("dd/MM HH:mm")</td><td>@trip.Arrival.ToString("dd/MM HH:mm")</td><td>@trip.BaseFare.ToString("N0") đ</td><td>@trip.AvailableSeats / @trip.SeatCount</td></tr> }</tbody></table></div></div>
+<section class="section-block admin-content">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">BẢNG ĐIỀU KHIỂN</span>
+            <h1>Tổng quan vận hành & Báo cáo</h1>
+            <p class="muted">Lọc số liệu theo thời gian và xuất báo cáo thống kê.</p>
+        </div>
+        <span class="date-chip">@DateTime.Today.ToString("dd/MM/yyyy")</span>
+    </div>
+
+    <!-- Bộ lọc thời gian -->
+    <form asp-action="Dashboard" method="get" class="panel form-panel" style="margin-bottom:1.5rem;">
+        <div class="form-row" style="align-items:flex-end;">
+            <div>
+                <label>Từ ngày<input type="date" name="fromDate" value="@fromDate" required /></label>
+            </div>
+            <div>
+                <label>Đến ngày<input type="date" name="toDate" value="@toDate" required /></label>
+            </div>
+            <div>
+                <button class="button">Lọc thống kê</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="metric-grid">
+        <article><span>Vé đã bán</span><b>@ViewBag.Paid</b><small>Trong kỳ lọc (@ViewBag.Cancelled vé hủy)</small></article>
+        <article><span>Doanh thu</span><b>@(((decimal)ViewBag.Revenue).ToString("N0")) đ</b><small>Đã xác nhận thanh toán</small></article>
+        <article><span>Tỷ lệ lấp đầy</span><b>@ViewBag.OccupancyRate %</b><small>Trên @ViewBag.Trips chuyến trong kỳ</small></article>
+        <article><span>Người dùng</span><b>@ViewBag.Users</b><small>Tài khoản toàn hệ thống</small></article>
+    </div>
+
+    <!-- Form Lưu & Xuất báo cáo vào tblBaoCaoThongKe -->
+    <form asp-action="SaveAndExportReport" method="post" class="panel form-panel" style="margin:1.5rem 0;">
+        @Html.AntiForgeryToken()
+        <h2>Lưu & Xuất báo cáo thống kê</h2>
+        <input type="hidden" name="fromDate" value="@fromDate" />
+        <input type="hidden" name="toDate" value="@toDate" />
+        <div class="form-row">
+            <div>
+                <label>Tiêu đề báo cáo<input name="title" placeholder="Báo cáo doanh thu tháng..." required /></label>
+            </div>
+            <div>
+                <label>Loại báo cáo
+                    <select name="reportType">
+                        <option value="TheoTuan">Theo tuần</option>
+                        <option value="TheoThang" selected>Theo tháng</option>
+                        <option value="TheoTuyen">Theo tuyến</option>
+                        <option value="TuyChon">Tùy chọn</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <button class="button">Lưu CSDL & Xuất file CSV</button>
+    </form>
+
+    <div class="admin-shortcuts">
+        <a asp-action="RoutesAndTrips"> Quản lý nhà ga, tuyến & chuyến</a>
+        <a asp-action="Users">♙ Quản lý người dùng</a>
+        <a asp-controller="Staff" asp-action="Lookup">Soát vé & Tra cứu</a>
+        <a asp-controller="Staff" asp-action="CounterSale"> Bán vé tại quầy</a>
+    </div>
+
+    <div class="panel table-panel">
+        <div class="section-heading"><h2>Lịch sử báo cáo đã lưu</h2><span class="result-count">@reports.Count báo cáo</span></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Tiêu đề</th><th>Kỳ báo cáo</th><th>Vé bán / Hủy</th><th>Doanh thu</th><th>Lấp đầy</th><th>Tệp xuất</th><th>Ngày lập</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in reports)
+                    {
+                        <tr>
+                            <td><b>@r.Title</b><br /><small class="muted">@r.ReportType · bởi @r.Admin?.Name</small></td>
+                            <td>@r.FromDate.ToString("dd/MM/yyyy") - @r.ToDate.ToString("dd/MM/yyyy")</td>
+                            <td>@r.TotalSold / <span class="danger-link">@r.TotalCancelled</span></td>
+                            <td><b>@r.TotalRevenue.ToString("N0") đ</b></td>
+                            <td>@r.OccupancyRate %</td>
+                            <td><small>@r.FileName</small></td>
+                            <td>@r.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </section>

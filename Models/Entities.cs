@@ -100,6 +100,8 @@ public sealed class TrainTicket
     public DbUser? ConfirmedByUser { get; set; }
     public TrainTrip? Trip { get; set; }
     public Seat? Seat { get; set; }
+    public string BoardingStatus { get; set; } = "ChuaSoat"; // ChuaSoat / DaLenTau
+    public DateTime? BoardedAt { get; set; }
 }
 
 public sealed class LoginInput
@@ -192,4 +194,70 @@ public sealed class TicketLookupInput
 {
     [Required]
     public string Query { get; set; } = string.Empty;
+}
+public sealed class StatisticalReport
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? ReportType { get; set; } // TheoTuan / TheoThang / TheoTuyen / TuyChon
+    public DateTime FromDate { get; set; }
+    public DateTime ToDate { get; set; }
+    public int AdminId { get; set; }
+    public int TotalSold { get; set; }
+    public int TotalCancelled { get; set; }
+    public decimal TotalRevenue { get; set; }
+    public double OccupancyRate { get; set; }
+    public string? FileName { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DbUser? Admin { get; set; }
+}
+
+public sealed class ChangePasswordInput
+{
+    [Required(ErrorMessage = "Vui lòng nhập mật khẩu hiện tại.")]
+    public string CurrentPassword { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới."), MinLength(6, ErrorMessage = "Mật khẩu mới tối thiểu 6 ký tự.")]
+    public string NewPassword { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Vui lòng xác nhận mật khẩu mới."), Compare(nameof(NewPassword), ErrorMessage = "Mật khẩu xác nhận không khớp.")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+public sealed class StationInput
+{
+    public int Id { get; set; }
+    [Required, StringLength(100)]
+    public string Name { get; set; } = string.Empty;
+    [Required, StringLength(20)]
+    public string Code { get; set; } = string.Empty;
+    [StringLength(255)]
+    public string? Address { get; set; }
+    [StringLength(100)]
+    public string? City { get; set; }
+}
+
+public sealed class EditTripInput
+{
+    public int Id { get; set; }
+    [Required, StringLength(20)]
+    public string TrainCode { get; set; } = string.Empty;
+    public int RouteId { get; set; }
+    public DateTime Departure { get; set; }
+    public DateTime Arrival { get; set; }
+    [Range(typeof(decimal), "1", "100000000")]
+    public decimal Fare { get; set; }
+    public string Status { get; set; } = "HoatDong";
+}
+
+public sealed class CounterBookingInput
+{
+    [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn chuyến tàu.")]
+    public int TripId { get; set; }
+    [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn ghế.")]
+    public int SeatId { get; set; }
+    [Required, StringLength(100)]
+    public string PassengerName { get; set; } = string.Empty;
+    [Required, StringLength(20, MinimumLength = 9)]
+    public string PassengerCccd { get; set; } = string.Empty;
+    public string PaymentMethod { get; set; } = "TienMat";
 }
